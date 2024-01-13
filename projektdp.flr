@@ -1,0 +1,237 @@
+osoba[
+       ime => \string,
+       prezime => \string,
+       adresa => \string,
+       god_rodjenja => \integer,
+       broj_mobitela => \string,
+       email => \string,
+       drzava_prebivalista => \string
+     ].
+
+djelatnik :: osoba[
+		    radno_mjesto => \string,
+		    godine_staza => \integer,
+		    satnica => \float,
+		    radno_vrijeme => \struct,
+		    placa(\float) => \float,
+		    broj_djece => \integer,
+		    godisnji_odmor => \integer
+		  ].
+
+klijent :: osoba[
+		  vozilo => \vozilo,
+		  broj_osobne_iskaznice => \string,
+		  broj_putovice => \string,
+		  vrsta_subjekta => \string,
+		  cijena_popust => \float,
+		  dozvoljeno_iznajmiti => \integer,
+		  cijena_najma_ukupno => \float
+		].
+
+vozilo[
+	marka => \string,
+	datum_posudbe => \date,
+	broj_dana => \integer,
+	godina_proizvodnje => \integer,
+	vrsta => \string,
+	cijena_po_danu => \float,
+	cijena_najma(\integer) => \float,
+	dostupnost => \string
+      ].
+
+
+?vozilo[cijena_najma(?dani) -> ?cijena_najma]:-
+	?vozilo[cijena_po_danu->?cijena_po_danu],
+	?cijena_najma \is ?dani * ?cijena_po_danu.
+
+?klijent[cijena_najma_ukupno -> ?cijena_najma_ukupno]:-
+	?cijena_najma_ukupno = sum{?cijena_najma_a|?klijent[vozilo->?auto],
+				    ?auto[cijena_po_danu->?cijena_po_danu],
+				    ?auto[broj_dana->?dani],
+	?cijena_najma_a \is ?dani * ?cijena_po_danu}.
+	
+
+?klijent[cijena_popust->?cijena_popust]:-
+	?klijent[vrsta_subjekta->?vrsta_subjekta],
+	?klijent[cijena_najma_ukupno->?cijena_najma_ukupno],
+	?vrsta_subjekta == 'pravna osoba' -->> ?cijena_popust \is ?cijena_najma_ukupno - 0.1 ;
+	?cijena_popust \is 0.
+
+?klijent[dozvoljeno_iznajmiti ->?dozvoljeno_iznajmiti]:-
+	?klijent[vrsta_subjekta->?vrsta_subjekta],
+	?vrsta_subjekta == 'fizicka osoba' -->> ?dozvoljeno_iznajmiti \is 1;
+	?dozvoljeno_iznajmiti \is 5.
+	
+
+?djelatnik [placa(?broj_sati_rada) -> ?placa]:-
+	?djelatnik[satnica->?satnica],
+	?djelatnik[godine_staza->?godine_staza],
+	(?godine_staza >=3 -->> ?placa \is ?satnica * ?broj_sati_rada * 1.5;
+	  ?placa \is ?satnica * ?broj_sati_rada).
+
+?djelatnik[godisnji_odmor -> ?godisnji_odmor]:-
+	?djelatnik[broj_djece->?broj_djece],
+	?broj_djece > 0 -->> ?godisnji_odmor \is 25 + ?broj_djece * 3;
+	?godisnji_odmor \is 25.
+
+
+pero:djelatnik[
+		ime -> Pero,
+		prezime -> Peric,
+		adresa -> 'Donji Emovci 30e',
+		god_rodjenja -> 2000,
+		broj_mobitela -> 09878455,
+		email -> 'pero@firma.hr',
+		drzava_prebivalista -> Hrvatska,
+		radno_mjesto -> 'djelatnik u prodaji',
+		godine_staza -> 2,
+		satnica -> 5.5,
+		radno_vrijeme -> od_do(14,21),
+		broj_djece -> 0
+	      ].
+
+maja:djelatnik[
+		ime -> Maja,
+		prezime -> Majic,
+		adresa -> 'Frankopanska 7',
+		god_rodjenja -> 1991,
+		broj_mobitela -> 09878400,
+		email -> 'maja@firma.hr',
+		drzava_prebivalista -> Hrvatska,
+		radno_mjesto -> 'djelatnik u prodaji',
+		godine_staza -> 4,
+		satnica -> 5.5,
+		radno_vrijeme -> od_do(8,14),
+		broj_djece -> 2
+	      ].
+
+hrvoje:djelatnik[
+		ime -> Hrvoje,
+		prezime -> Zelic,
+		adresa -> 'Ulica Mira 47b',
+		god_rodjenja -> 1990,
+		broj_mobitela -> 099745122,
+		email -> 'hrvoje@firma.hr',
+		drzava_prebivalista -> Hrvatska,
+		radno_mjesto -> 'vlasnik',
+		godine_staza -> 5,
+		satnica -> 6,
+		radno_vrijeme -> od_do(8,14),
+		broj_djece -> 3
+	      ].
+
+petar:klijent[
+		ime -> Petar,
+		prezime -> Horvat,
+		adresa -> 'Vukovarska 8a',
+		god_rodjenja -> 1990,
+		broj_mobitela -> 0918578800,
+		email -> 'petar@firma.hr',
+		drzava_prebivalista -> Hrvatska,
+	        vozilo -> {vozilo1,vozilo3},
+		broj_osobne_iskaznice -> 787979699797,
+	        broj_putovice -> nema,
+	        vrsta_subjekta -> 'pravna osoba'
+	     ].
+
+filip:klijent[
+	        ime -> Filip,
+		prezime -> Fizek,
+		adresa -> 'Zelena ulica 23',
+		god_rodjenja -> 1995,
+		broj_mobitela -> 097945421,
+		email -> 'filip@firma.hr',
+		drzava_prebivalista -> Hrvatska,
+	        vozilo -> vozilo2,
+		broj_osobne_iskaznice -> 123456789741,
+	        broj_putovice -> nema,
+	        vrsta_subjekta -> 'fizicka osoba'
+	     ].
+
+sara:klijent[
+	        ime -> Sara,
+		prezime -> Maric,
+		adresa -> 'Orljavska 47',
+		god_rodjenja -> 1999,
+		broj_mobitela -> 09975135,
+		email -> 'sara@firma.hr',
+		drzava_prebivalista -> Hrvatska,
+	        vozilo -> vozilo4,
+		broj_osobne_iskaznice -> 1877756789741,
+	        broj_putovice -> nema,
+	        vrsta_subjekta -> 'fizicka osoba'
+	     ].
+
+klara:klijent[
+	        ime -> Klara,
+		prezime -> Klaric,
+		adresa -> 'Grosse Strasse 255',
+		god_rodjenja -> 1994,
+		broj_mobitela -> 004578552,
+		email -> 'klara@master.de',
+		drzava_prebivalista -> Njemacka,
+	        vozilo -> vozilo6,
+		broj_osobne_iskaznice -> 44545454451,
+	        broj_putovice -> AH878787878,
+	        vrsta_subjekta -> 'fizicka osoba'
+	    ].
+
+vozilo1:vozilo[	
+	marka -> 'BMW X5',
+	datum_posudbe -> '2024-01-03',
+	broj_dana -> 7,
+	godina_proizvodnje -> 2007,
+	vrsta -> automobil,
+	cijena_po_danu -> 150,
+	dostupnost -> iznajmljeno
+	      ].
+
+vozilo2:vozilo[
+	marka -> 'Opel Corsa',
+	datum_posudbe -> '2004-12-24',
+	broj_dana -> 4,
+	godina_proizvodnje -> 2005,
+	vrsta -> automobil,
+	cijena_po_danu -> 50,
+	dostupnost -> iznajmljeno
+	      ].
+
+vozilo3:vozilo[
+	marka -> 'Ford Transit Connect',
+	datum_posudbe -> '2024-01-01',
+	broj_dana -> 3,
+	godina_proizvodnje -> 2004,
+	vrsta -> kombi,
+	cijena_po_danu -> 80,
+	dostupnost -> iznajmljeno
+	      ].
+
+vozilo4:vozilo[
+	marka -> 'VW Polo',
+	datum_posudbe -> '2024-01-05',
+	broj_dana -> 7,
+	godina_proizvodnje -> 2022,
+	vrsta -> automobil,
+	cijena_po_danu -> 55,
+	dostupnost -> iznajmljeno
+	      ].
+
+vozilo5:vozilo[
+	marka -> 'Audi A6',
+	datum_posudbe -> nema,
+	broj_dana -> 0,
+	godina_proizvodnje -> 2023,
+	vrsta -> automobil,
+	cijena_po_danu -> 80,
+	dostupnost -> dostupno
+	      ].
+
+vozilo6:vozilo[
+	marka -> 'Renault Transit',
+	datum_posudbe -> '2024-01-08',
+	broj_dana -> 2,
+	godina_proizvodnje -> 2021,
+	vrsta -> kombi,
+	cijena_po_danu -> 85,
+	dostupnost -> iznajmljeno
+	      ].
